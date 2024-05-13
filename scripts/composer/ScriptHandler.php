@@ -11,7 +11,7 @@ use Composer\Script\Event;
 use Composer\Semver\Comparator;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Site\SettingsEditor;
-use DrupalFinder\DrupalFinder;
+use DrupalFinder\DrupalFinderComposerRuntime;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 
@@ -19,9 +19,17 @@ class ScriptHandler {
 
   public static function createRequiredFiles(Event $event) {
     $fs = new Filesystem();
-    $drupalFinder = new DrupalFinder();
-    $drupalFinder->locateRoot(getcwd());
+    $drupalFinder = new DrupalFinderComposerRuntime();
     $drupalRoot = $drupalFinder->getDrupalRoot();
+
+    // If Drupal root was not found, exit.
+    if (is_null($drupalRoot)) {
+      $io = $event->getIO();
+      $io->writeError(
+        '<error>Drupal root could not be detected.</error>',
+      );
+      exit(1);
+    }
 
     $dirs = [
       'modules',
